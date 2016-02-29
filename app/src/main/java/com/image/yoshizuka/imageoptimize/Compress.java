@@ -102,22 +102,11 @@ public class Compress {
              */
             private int w, h;
 
+            private BitmapFactory.Options options2;
+
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                onCompressListener.onCompressStart();
-            }
-
-            @Override
-            protected void onCancelled() {
-                super.onCancelled();
-                onCompressListener.onCompressCancel();
-                if(bitmap != null)
-                    bitmap.recycle();
-            }
-
-            @Override
-            protected ByteArrayOutputStream doInBackground(Object... params) {
                 String[] paths = imagePath.split("\\/");
                 String fileName = paths[paths.length - 1];
                 String[] splitFile = fileName.split("\\.");
@@ -143,12 +132,46 @@ public class Compress {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(imagePath, options);
-                BitmapFactory.Options options2 = new BitmapFactory.Options();
+                options2 = new BitmapFactory.Options();
                 options2.inJustDecodeBounds = false;
                 options2.outWidth = options.outWidth;
                 options2.outHeight = options.outHeight;
                 options2.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 options2.inDither = true;
+
+                int tw, th;
+                tw = options.outWidth;
+                th = options.outHeight;
+                int width = context.getResources().getDisplayMetrics().widthPixels;
+                if(tw > width) {
+                    th = (th * width) / tw;
+                    tw = width;
+                }
+                ImageOptimize imageOptimize = new ImageOptimize();
+                imageOptimize.setHeight(th);
+                imageOptimize.setWidth(tw);
+                imageOptimize.setPath(imagePath);
+                imageOptimize.setOut(file);
+                imageOptimize.setStream(null);
+
+                MainObject mainObject = new MainObject();
+                mainObject.setImageOptimize(imageOptimize);
+                mainObject.setImagePath(imagePath);
+                mainObject.setSize(String.valueOf(new File(imagePath).length() / 1024));
+                onCompressListener.onCompressStart(mainObject);
+            }
+
+            @Override
+            protected void onCancelled() {
+                super.onCancelled();
+                onCompressListener.onCompressCancel();
+                if(bitmap != null)
+                    bitmap.recycle();
+            }
+
+            @Override
+            protected ByteArrayOutputStream doInBackground(Object... params) {
+
                 try {
                     // attention il peut y avoir un blocage en mémoire
                     bitmap = BitmapFactory.decodeFile(imagePath, options2);
@@ -226,7 +249,7 @@ public class Compress {
         /**
          * Lorsque la compression a commencé
          */
-        void onCompressStart();
+        void onCompressStart(MainObject mainObject);
 
         /**
          * Lorsque la compression a été annulée

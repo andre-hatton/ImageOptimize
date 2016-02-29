@@ -25,6 +25,8 @@ public class ImageOptimize {
 
     private int width, height;
 
+    private int ratio = 80;
+
     public ByteArrayOutputStream getStream() {
         return stream;
     }
@@ -50,7 +52,7 @@ public class ImageOptimize {
     }
 
     public int size() {
-        return stream.size() / 1024;
+        return stream == null ? 0 : stream.size() / 1024;
     }
 
     public int getWidth() {
@@ -67,5 +69,13 @@ public class ImageOptimize {
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public int getRatio() {
+        return ratio;
+    }
+
+    public void setRatio(int ratio) {
+        this.ratio = ratio;
     }
 }

@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
     }
 
+    private int k;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 mainList = new ArrayList<>();
                 adapter.setMainList(mainList);
                 int i = 0;
+                k = 0;
                 // parcours des images
                 for(final String path : imageSelected) {
                     Compress compress = Compress.getInstance(this);
@@ -95,13 +97,16 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                     compress.setOnCompressListener(new Compress.OnCompressListener() {
                         @Override
                         public void onCompress(MainObject mainObject) {
-                            mainList.add(mainObject);
-                            adapter.setMainList(mainList, j);
+
+                            mainList.set(k, mainObject);
+                            adapter.updateMainList(mainList, k);
+                            k++;
                         }
 
                         @Override
-                        public void onCompressStart() {
-
+                        public void onCompressStart(MainObject mainObject) {
+                            mainList.add(mainObject);
+                            adapter.setMainList(mainList, j);
                         }
 
                         @Override

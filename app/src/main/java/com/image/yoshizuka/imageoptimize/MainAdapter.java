@@ -53,6 +53,15 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
     }
 
     /**
+     * Met à jour la liste des données
+     * @param mainList
+     */
+    public void updateMainList(List<MainObject> mainList, int position) {
+        this.mainList = mainList;
+        notifyItemChanged(position);
+    }
+
+    /**
      * Called when RecyclerView needs a new {@link RecyclerView.ViewHolder} of the given type to represent
      * an item.
      * <p/>
@@ -102,9 +111,16 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
     public void onBindViewHolder(final MainHolder holder, final int position) {
         holder.image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mainList.get(position).getImageOptimize().getHeight()));
         //Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().dontTransform().into(holder.image);
-        Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().into(holder.image);
-        holder.size.setText("Taille d'origine : ".concat(mainList.get(position).getSize()).concat("\nTaille compressée : ").concat(String.valueOf(mainList.get(position).getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(80))));
+        ImageOptimize optimize = mainList.get(position).getImageOptimize();
+        if(optimize.getStream() == null) {
+            holder.image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, optimize.getHeight()));
+            holder.image.setImageBitmap(null);
+        } else {
+            Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().into(holder.image);
+        }
+        holder.size.setText("Taille d'origine : ".concat(mainList.get(position).getSize()).concat("\nTaille compressée : ").concat(optimize.size() == 0 ? "calcul..." : String.valueOf(optimize.size())).concat("\nCompression : ".concat(String.valueOf(optimize.getRatio()))));
 
+        holder.bar.setProgress(mainList.get(position).getImageOptimize().getRatio());
         holder.bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -123,13 +139,15 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
                 compress.setOnCompressListener(new Compress.OnCompressListener() {
                     @Override
                     public void onCompress(MainObject mainObject) {
+                        mainObject.getImageOptimize().setRatio(progress);
                         holder.size.setText("Taille d'origine : ".concat(mainList.get(position).getSize()).concat("\nTaille compressée : ").concat(String.valueOf(mainObject.getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress))));
                         Glide.with(context).load(mainObject.getImageOptimize().getStream().toByteArray()).into(holder.image);
                         onMainAdapterListener.onUpdateRatio(position, mainObject);
                     }
 
                     @Override
-                    public void onCompressStart() {
+                    public void onCompressStart(MainObject mainObject) {
+                        mainObject.getImageOptimize().setRatio(progress);
                         holder.size.setText("Taille d'origine : ".concat(mainList.get(position).getSize()).concat("\nTaille compressée : calcul...").concat("\nCompression : ").concat(String.valueOf(progress)));
                     }
 
