@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import me.iwf.photopicker.entity.Photo;
 import me.iwf.photopicker.event.OnItemCheckListener;
-import me.iwf.photopicker.fragment.ImagePagerFragment;
 import me.iwf.photopicker.fragment.PhotoPickerFragment;
 
 import static android.widget.Toast.LENGTH_LONG;
@@ -22,7 +21,6 @@ import static android.widget.Toast.LENGTH_LONG;
 public class PhotoPickerActivity extends AppCompatActivity {
 
     private PhotoPickerFragment pickerFragment;
-    private ImagePagerFragment imagePagerFragment;
 
     public final static String EXTRA_MAX_COUNT     = "MAX_COUNT";
     public final static String EXTRA_SHOW_CAMERA   = "SHOW_CAMERA";
@@ -111,28 +109,11 @@ public class PhotoPickerActivity extends AppCompatActivity {
      * the activity when it complete.
      */
     @Override public void onBackPressed() {
-        if (imagePagerFragment != null && imagePagerFragment.isVisible()) {
-            imagePagerFragment.runExitAnimation(new Runnable() {
-                public void run() {
-                    if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                        getSupportFragmentManager().popBackStack();
-                    }
-                }
-            });
-        } else {
+
             super.onBackPressed();
-        }
+
     }
 
-
-    public void addImagePagerFragment(ImagePagerFragment imagePagerFragment) {
-        this.imagePagerFragment = imagePagerFragment;
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, this.imagePagerFragment)
-                .addToBackStack(null)
-                .commit();
-    }
 
     @Override public boolean onCreateOptionsMenu(Menu menu) {
         if (!menuIsInflated) {

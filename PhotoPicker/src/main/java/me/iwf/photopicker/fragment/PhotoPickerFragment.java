@@ -18,10 +18,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import me.iwf.photopicker.PhotoPickerActivity;
+
 import me.iwf.photopicker.R;
 import me.iwf.photopicker.adapter.PhotoGridAdapter;
 import me.iwf.photopicker.adapter.PopupDirectoryListAdapter;
@@ -140,17 +141,11 @@ public class PhotoPickerFragment extends Fragment {
 
         photoGridAdapter.setOnPhotoClickListener(new OnPhotoClickListener() {
             @Override public void onClick(View v, int position, boolean showCamera) {
-                final int index = showCamera ? position - 1 : position;
-
-                List<String> photos = photoGridAdapter.getCurrentPhotoPaths();
+                photoGridAdapter.getCurrentPhotoPaths();
 
                 int[] screenLocation = new int[2];
                 v.getLocationOnScreen(screenLocation);
-                ImagePagerFragment imagePagerFragment =
-                        ImagePagerFragment.newInstance(photos, index, screenLocation, v.getWidth(),
-                                v.getHeight());
 
-                ((PhotoPickerActivity) getActivity()).addImagePagerFragment(imagePagerFragment);
             }
         });
 
@@ -231,10 +226,6 @@ public class PhotoPickerFragment extends Fragment {
     public void onViewStateRestored(Bundle savedInstanceState) {
         captureManager.onRestoreInstanceState(savedInstanceState);
         super.onViewStateRestored(savedInstanceState);
-    }
-
-    public ArrayList<String> getSelectedPhotoPaths() {
-        return photoGridAdapter.getSelectedPhotoPaths();
     }
 
 }
