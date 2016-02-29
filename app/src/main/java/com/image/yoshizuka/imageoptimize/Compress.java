@@ -113,7 +113,7 @@ public class Compress {
                 ext = splitFile[splitFile.length - 1];
 
                 // creer le dossier ImageOptimizer s'il n'existe pas
-                File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "ImageOptimizer");
+                File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Optimage");
                 if(!directory.exists())
                     directory.mkdirs();
 
@@ -157,7 +157,7 @@ public class Compress {
                 MainObject mainObject = new MainObject();
                 mainObject.setImageOptimize(imageOptimize);
                 mainObject.setImagePath(imagePath);
-                mainObject.setSize(String.valueOf(new File(imagePath).length() / 1024));
+                mainObject.setSize(new File(imagePath).length());
                 onCompressListener.onCompressStart(mainObject);
             }
 
@@ -176,7 +176,8 @@ public class Compress {
                     // attention il peut y avoir un blocage en mémoire
                     bitmap = BitmapFactory.decodeFile(imagePath, options2);
                 } catch (OutOfMemoryError e) {
-                    cancel(true);
+                    System.gc();
+                    cancel(false);
                     e.printStackTrace();
                 }
 
@@ -190,6 +191,7 @@ public class Compress {
                 w = bitmap.getWidth();
                 h = bitmap.getHeight();
                 bitmap.recycle();
+                System.gc();
                 return os;
             }
 
@@ -217,7 +219,7 @@ public class Compress {
                 MainObject mainObject = new MainObject();
                 mainObject.setImageOptimize(imageOptimize);
                 mainObject.setImagePath(imagePath);
-                mainObject.setSize(String.valueOf(new File(imagePath).length() / 1024));
+                mainObject.setSize(new File(imagePath).length());
 
                 onCompressListener.onCompress(mainObject);
             }

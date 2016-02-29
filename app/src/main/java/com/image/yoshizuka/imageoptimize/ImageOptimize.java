@@ -52,7 +52,7 @@ public class ImageOptimize {
     }
 
     public int size() {
-        return stream == null ? 0 : stream.size() / 1024;
+        return stream == null ? 0 : stream.size();
     }
 
     public int getWidth() {

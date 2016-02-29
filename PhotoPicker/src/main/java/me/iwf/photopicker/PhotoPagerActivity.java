@@ -45,6 +45,7 @@ public class PhotoPagerActivity extends AppCompatActivity {
 
     Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
     setSupportActionBar(mToolbar);
+    mToolbar.setPopupTheme(android.R.style.DeviceDefault_Light_ButtonBar);
 
     actionBar = getSupportActionBar();
 

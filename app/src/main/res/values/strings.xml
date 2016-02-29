@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImageOptimize</string>
+    <string name="app_name">Optimage</string>
     <string name="action_settings">Settings</string>
 
 <!-- TODO: Remove or change this placeholder text -->
@@ -7,4 +7,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Annuler</string>
     <string name="title_file_manager">Choisir une image</string>
+    <string name="compress">Compresser</string>
+    <string name="compress_end">Compression terminée</string>
+    <string name="images">images</string>
 </resources>

@@ -7,7 +7,7 @@ public class MainObject {
 
     private String imagePath;
 
-    private String size;
+    private long size;
 
     private ImageOptimize imageOptimize;
 
@@ -19,11 +19,11 @@ public class MainObject {
         this.imagePath = imagePath;
     }
 
-    public String getSize() {
+    public long getSize() {
         return size;
     }
 
-    public void setSize(String size) {
+    public void setSize(long size) {
         this.size = size;
     }
 
@@ -33,5 +33,13 @@ public class MainObject {
 
     public void setImageOptimize(ImageOptimize imageOptimize) {
         this.imageOptimize = imageOptimize;
+    }
+
+    public static String humanReadableByteCount(long bytes) {
+        int unit = 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = "KMGTPE".charAt(exp-1) + "i";
+        return String.format("%.1f %so", bytes / Math.pow(unit, exp), pre);
     }
 }
