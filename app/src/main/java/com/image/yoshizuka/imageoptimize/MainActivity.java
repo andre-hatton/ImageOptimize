@@ -7,8 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import java.io.FileOutputStream;
@@ -19,17 +17,34 @@ import java.util.List;
 import me.iwf.photopicker.PhotoPickerActivity;
 import me.iwf.photopicker.utils.PhotoPickerIntent;
 
-
+/**
+ * Activité principal (normalement comme c'est une petite application il n'y a rien d'autre)
+ */
 public class MainActivity extends AppCompatActivity implements MainAdapter.OnMainAdapterListener {
 
+    /**
+     * code de retour de l'explorateur d'image
+     */
     private final static int REQUEST_CODE = 1;
 
+    /**
+     * Liste des images selectionnées (chemin des fichiers)
+     */
     private ArrayList<String> imageSelected;
 
+    /**
+     * La liste des données une fois des images selectionnées
+     */
     private RecyclerView imageList;
 
+    /**
+     * L'adapter lié à la liste
+     */
     private MainAdapter adapter;
 
+    /**
+     * Liste des images selectionnées
+     */
     private List<MainObject> mainList = new ArrayList<>();
 
     @Override
@@ -65,12 +80,18 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             if (data != null) {
+                // liste des chemin des images d'origine
                 imageSelected = data.getStringArrayListExtra(PhotoPickerActivity.KEY_SELECTED_PHOTOS);
+
+                // vide la liste des données de la listView
                 mainList = new ArrayList<>();
+                adapter.setMainList(mainList);
                 int i = 0;
+                // parcours des images
                 for(final String path : imageSelected) {
                     Compress compress = Compress.getInstance(this);
                     final int j = i;
+                    // on detecte la fin de la compression pour ajouter l'image à la liste
                     compress.setOnCompressListener(new Compress.OnCompressListener() {
                         @Override
                         public void onCompress(MainObject mainObject) {
@@ -88,38 +109,21 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
                         }
                     });
+                    // on empêche l'annulation des tache pour chargé toutes les images
                     compress.setCanCancel(false);
+                    // compression de l'image avec un ratio de 80%
                     compress.compressImage(path, 80);
                     i++;
                 }
-                adapter.setMainList(mainList);
-
             }
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
+    /**
+     * Sur le clic du bouton de compression
+     * Ecrit dans un fichier chaque images compressées
+     * @param view Le bouton
+     */
     public void onCompress(View view) {
         for(MainObject mainObject : mainList) {
             FileOutputStream out;

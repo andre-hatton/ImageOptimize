@@ -6,7 +6,7 @@ android {
   resourcePrefix "__picker_"
 
   defaultConfig {
-    minSdkVersion 10
+    minSdkVersion 15
     targetSdkVersion 23
     versionCode 13
     versionName "0.3.0-preview"

@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
     android:minHeight="?attr/actionBarSize"
-    app:theme="?attr/actionBarTheme"
-    app:popupTheme="?attr/actionBarPopupTheme"
-    android:background="?attr/colorPrimary"
+    app:theme="@android:style/Theme.Holo.Light"
+    app:popupTheme="@android:style/Theme.Holo.Light.Dialog"
     android:id="@+id/toolbar"/>

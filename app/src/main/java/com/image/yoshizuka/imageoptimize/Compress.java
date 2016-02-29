@@ -12,19 +12,40 @@ import java.io.IOException;
 
 /**
  * Created by yoshizuka on 28/02/16.
+ * Gestion de la compression des images
  */
 public class Compress {
 
+    /**
+     * Le context
+     */
     private Context context;
 
+    /**
+     * L'écouteur de la compression
+     */
     private OnCompressListener onCompressListener;
 
+    /**
+     * L'instance en cours
+     */
     private static Compress _instance;
 
+    /**
+     * La tache en cours
+     */
     private AsyncTask task;
 
+    /**
+     * Empêche les taches de s'annuler
+     */
     private boolean canCancel;
 
+    /**
+     * Recuperation de l'instance (pour ne pas lancer de tache en parallele)
+     * @param context Le context actuel
+     * @return L'instance courante
+     */
     public static Compress getInstance(Context context) {
         if(_instance == null) _instance = new Compress();
         _instance.context = context;
@@ -35,20 +56,52 @@ public class Compress {
     private Compress() {
     }
 
+    /**
+     * Listener permettant de detecter la fin de la compression
+     * @param onCompressListener Le listener
+     */
     public void setOnCompressListener(OnCompressListener onCompressListener) {
         this.onCompressListener = onCompressListener;
     }
 
+    /**
+     * Compresse l'image de façon asynchrone
+     * @param imagePath L'image d'origine
+     * @param progress Le ratio de compression
+     */
     public void compressImage(final String imagePath, final int progress) {
+        // annule la tache en cours
         if(task != null && canCancel)
             task.cancel(false);
+
+        // créer une nouvelle tache
         task = new AsyncTask<Object, ByteArrayOutputStream, ByteArrayOutputStream>() {
 
+            /**
+             * L'image bitmap de base
+             */
             private Bitmap bitmap;
+
+            /**
+             * L'extension du fichier de base
+             */
             private String ext;
+
+            /**
+             * Données de l'objet optimisé
+             */
             private ImageOptimize imageOptimize;
+
+            /**
+             * Le fichier de sortie
+             */
             private File file;
+
+            /**
+             * Les dimension de l'image de sortie
+             */
             private int w, h;
+
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
@@ -67,16 +120,26 @@ public class Compress {
             protected ByteArrayOutputStream doInBackground(Object... params) {
                 String[] paths = imagePath.split("\\/");
                 String fileName = paths[paths.length - 1];
+                String[] splitFile = fileName.split("\\.");
+                ext = splitFile[splitFile.length - 1];
 
+                // creer le dossier ImageOptimizer s'il n'existe pas
                 File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "ImageOptimizer");
                 if(!directory.exists())
                     directory.mkdirs();
+
+                // verifie si l'image de sortie existe ou non
                 file = new File(directory.getAbsolutePath() + "/" + fileName);
-                int i = 0;
+                int i = 1;
+                int index = fileName.lastIndexOf(ext);
+                String baseName = fileName.substring(0, index - 1);
                 while(file.exists()) {
-                    file = new File(directory.getAbsolutePath() + "/" + i + fileName);
+                    // ajoute un identifiant en plus si l'image existe déjà
+                    file = new File(directory.getAbsolutePath() + "/" + baseName + "_" + i + "." + ext);
                     i++;
                 }
+
+                // options du bitmap (est ce vraiment necessaire ? à voir)
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(imagePath, options);
@@ -87,14 +150,14 @@ public class Compress {
                 options2.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 options2.inDither = true;
                 try {
+                    // attention il peut y avoir un blocage en mémoire
                     bitmap = BitmapFactory.decodeFile(imagePath, options2);
                 } catch (OutOfMemoryError e) {
                     cancel(true);
                     e.printStackTrace();
                 }
 
-                String[] splitFile = fileName.split("\\.");
-                ext = splitFile[splitFile.length - 1];
+                // la sortie de la compression (n'est pas un fichier pour le moment)
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 if(ext.toLowerCase().equals("jpg") || ext.toLowerCase().equals("jpeg")) {
                     bitmap.compress(Bitmap.CompressFormat.JPEG, progress, os);
@@ -140,17 +203,34 @@ public class Compress {
 
     }
 
-    public boolean isCanCancel() {
-        return canCancel;
-    }
 
+    /**
+     * Empêche ou non l'annulation de la tache en cours
+     * @param canCancel false pour ne pas annuler
+     */
     public void setCanCancel(boolean canCancel) {
         this.canCancel = canCancel;
     }
 
+    /**
+     * Gestion des retour de la compression
+     */
     public interface OnCompressListener {
+
+        /**
+         * La compression est terminée
+         * @param mainObject L'objet contenant les données de l'image final
+         */
         void onCompress(MainObject mainObject);
+
+        /**
+         * Lorsque la compression a commencé
+         */
         void onCompressStart();
+
+        /**
+         * Lorsque la compression a été annulée
+         */
         void onCompressCancel();
     }
 }
