@@ -6,7 +6,9 @@
     <ImageView
         android:id="@+id/adapter_image"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@null"/>
 
     <TextView
         android:id="@+id/adapter_size"

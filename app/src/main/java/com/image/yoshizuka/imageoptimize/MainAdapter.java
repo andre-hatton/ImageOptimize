@@ -1,6 +1,8 @@
 package com.image.yoshizuka.imageoptimize;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -113,18 +115,23 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
         //Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().dontTransform().into(holder.image);
         ImageOptimize optimize = mainList.get(position).getImageOptimize();
         if(optimize.getStream() == null) {
-            holder.image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, optimize.getHeight()));
-            holder.image.setImageBitmap(null);
+            holder.image.setLayoutParams(new RelativeLayout.LayoutParams(optimize.getWidth(), optimize.getHeight()));
+            Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.empty);
+            holder.image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, optimize.getWidth(), optimize.getHeight(), false));
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)holder.image.getLayoutParams();
+            params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+            holder.image.setLayoutParams(params);
+
         } else {
             Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().into(holder.image);
         }
-        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(optimize.size() == 0 ? "calcul..." : MainObject.humanReadableByteCount(optimize.size())).concat("\nCompression : ".concat(String.valueOf(optimize.getRatio()))));
+        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(optimize.size() == 0 ? "calcul..." : MainObject.humanReadableByteCount(optimize.size())).concat("\nCompression : ".concat(String.valueOf(optimize.getRatio())).concat("%")));
 
         holder.bar.setProgress(mainList.get(position).getImageOptimize().getRatio());
         holder.bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainList.get(position).getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress))));
+                holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainList.get(position).getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress)).concat("%")));
             }
 
             @Override
@@ -140,7 +147,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
                     @Override
                     public void onCompress(MainObject mainObject) {
                         mainObject.getImageOptimize().setRatio(progress);
-                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainObject.getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress))));
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainObject.getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress)).concat("%")));
                         Glide.with(context).load(mainObject.getImageOptimize().getStream().toByteArray()).into(holder.image);
                         onMainAdapterListener.onUpdateRatio(position, mainObject);
                     }
@@ -148,7 +155,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
                     @Override
                     public void onCompressStart(MainObject mainObject) {
                         mainObject.getImageOptimize().setRatio(progress);
-                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : calcul...").concat("\nCompression : ").concat(String.valueOf(progress)));
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : calcul...").concat("\nCompression : ").concat(String.valueOf(progress)).concat("%"));
                     }
 
                     @Override

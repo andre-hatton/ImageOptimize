@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
     private Button compressButton;
 
+    private ImageView toolbarAction;
+
     /**
      * Liste des images selectionnées
      */
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbarAction = (ImageView)toolbar.findViewById(R.id.toolbar_action);
         setSupportActionBar(toolbar);
 
 
@@ -77,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             if (data != null) {
+                toolbarAction.setClickable(false);
+                toolbarAction.setVisibility(View.GONE);
                 // liste des chemin des images d'origine
                 imageSelected = data.getStringArrayListExtra(PhotoPickerActivity.KEY_SELECTED_PHOTOS);
 
@@ -87,18 +93,24 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 int i = 0;
                 k = 0;
                 // parcours des images
+                final Compress compress = Compress.getInstance(this);
                 for(final String path : imageSelected) {
-                    final Compress compress = Compress.getInstance(this);
                     final int j = i;
                     // on detecte la fin de la compression pour ajouter l'image à la liste
                     compress.setOnCompressListener(new Compress.OnCompressListener() {
                         @Override
                         public void onCompress(MainObject mainObject) {
+                            if(k < mainList.size()) {
+                                mainList.set(k, mainObject);
+                                adapter.updateMainList(mainList, k);
+                                k++;
+                                if (k >= j) {
+                                    compressButton.setVisibility(View.VISIBLE);
+                                    toolbarAction.setClickable(true);
+                                    toolbarAction.setVisibility(View.VISIBLE);
 
-                            mainList.set(k, mainObject);
-                            adapter.updateMainList(mainList, k);
-                            k++;
-                            if(k >= j) compressButton.setVisibility(View.VISIBLE);
+                                }
+                            }
                         }
 
                         @Override

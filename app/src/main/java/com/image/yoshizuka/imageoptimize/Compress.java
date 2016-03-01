@@ -65,6 +65,18 @@ public class Compress {
     }
 
     /**
+     * Annule la tache en cours
+     * @return true si la tache et annulée
+     */
+    public boolean cancel() {
+        return task != null && task.cancel(false);
+    }
+
+    public AsyncTask getTask() {
+        return task;
+    }
+
+    /**
      * Compresse l'image de façon asynchrone
      * @param imagePath L'image d'origine
      * @param progress Le ratio de compression
@@ -221,7 +233,8 @@ public class Compress {
                 mainObject.setImagePath(imagePath);
                 mainObject.setSize(new File(imagePath).length());
 
-                onCompressListener.onCompress(mainObject);
+                if(!isCancelled())
+                   onCompressListener.onCompress(mainObject);
             }
         };
         task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, new Object());
