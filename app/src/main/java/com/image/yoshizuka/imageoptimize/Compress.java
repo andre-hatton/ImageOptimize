@@ -41,6 +41,8 @@ public class Compress {
      */
     private boolean canCancel;
 
+    private boolean isCancel = false;
+
     /**
      * Recuperation de l'instance (pour ne pas lancer de tache en parallele)
      * @param context Le context actuel
@@ -48,6 +50,7 @@ public class Compress {
      */
     public static Compress getInstance(Context context) {
         if(_instance == null) _instance = new Compress();
+        _instance.isCancel = false;
         _instance.context = context;
         _instance.canCancel = true;
         return _instance;
@@ -69,7 +72,7 @@ public class Compress {
      * @return true si la tache et annulée
      */
     public boolean cancel() {
-        return task != null && task.cancel(false);
+        return task != null && task.cancel(true);
     }
 
     public AsyncTask getTask() {
@@ -176,6 +179,9 @@ public class Compress {
             @Override
             protected void onCancelled() {
                 super.onCancelled();
+                System.out.println("onCancel");
+                isCancel = true;
+                setCanCancel(true);
                 onCompressListener.onCompressCancel();
                 if(bitmap != null)
                     bitmap.recycle();
@@ -183,7 +189,10 @@ public class Compress {
 
             @Override
             protected ByteArrayOutputStream doInBackground(Object... params) {
-
+                System.out.println("CANCEL : " + isCancelled());
+                if(isCancelled() || isCancel) {
+                    return null;
+                }
                 try {
                     // attention il peut y avoir un blocage en mémoire
                     bitmap = BitmapFactory.decodeFile(imagePath, options2);
@@ -216,7 +225,8 @@ public class Compress {
                 imageOptimize.setPath(imagePath);
                 imageOptimize.setStream(os);
                 try {
-                    os.close();
+                    if(os != null)
+                        os.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -233,10 +243,14 @@ public class Compress {
                 mainObject.setImagePath(imagePath);
                 mainObject.setSize(new File(imagePath).length());
 
-                if(!isCancelled())
+                if(!isCancelled() && !isCancel)
                    onCompressListener.onCompress(mainObject);
+                else
+                    onCompressListener.onCompressCancel();
             }
         };
+        // on utilise SERIAL_EXECUTOR pour éviter les fuite mémoire
+        // on vide la mémoire après chacun des chargements
         task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, new Object());
 
     }

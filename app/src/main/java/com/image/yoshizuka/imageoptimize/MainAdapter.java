@@ -54,6 +54,11 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
         notifyItemChanged(position);
     }
 
+    public void setMainListRemove(List<MainObject> mainList, int position) {
+        this.mainList = mainList;
+        notifyItemRemoved(position);
+    }
+
     /**
      * Met à jour la liste des données
      * @param mainList

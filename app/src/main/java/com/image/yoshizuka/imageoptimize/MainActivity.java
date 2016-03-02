@@ -89,7 +89,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 // vide la liste des données de la listView
                 mainList = new ArrayList<>();
                 adapter.setMainList(mainList);
-                compressButton.setVisibility(View.GONE);
+                compressButton.setVisibility(View.VISIBLE);
+                compressButton.setText(R.string.cancel);
                 int i = 0;
                 k = 0;
                 // parcours des images
@@ -101,14 +102,18 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                         @Override
                         public void onCompress(MainObject mainObject) {
                             if(k < mainList.size()) {
-                                mainList.set(k, mainObject);
-                                adapter.updateMainList(mainList, k);
+                                if(mainObject.getImageOptimize() != null && mainObject.getImageOptimize().getStream() != null) {
+                                    mainList.set(k, mainObject);
+                                    adapter.updateMainList(mainList, k);
+                                } else {
+                                    mainList.remove(k);
+                                    adapter.setMainListRemove(mainList, k);
+                                }
                                 k++;
                                 if (k >= j) {
-                                    compressButton.setVisibility(View.VISIBLE);
                                     toolbarAction.setClickable(true);
                                     toolbarAction.setVisibility(View.VISIBLE);
-
+                                    compressButton.setText(R.string.compress);
                                 }
                             }
                         }
@@ -121,7 +126,16 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
                         @Override
                         public void onCompressCancel() {
-
+                            if(mainList.size() > 0)
+                                mainList.remove(mainList.size() - 1);
+                            adapter.setMainListRemove(mainList, k);
+                            k++;
+                            if (k >= j) {
+                                toolbarAction.setClickable(true);
+                                toolbarAction.setVisibility(View.VISIBLE);
+                                if(mainList.size() == 0) compressButton.setVisibility(View.GONE);
+                                compressButton.setText(R.string.compress);
+                            }
                         }
                     });
                     // on empêche l'annulation des tache pour chargé toutes les images
@@ -152,24 +166,28 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
      * @param view Le bouton
      */
     public void onCompress(View view) {
-        for(MainObject mainObject : mainList) {
-            FileOutputStream out;
-            try {
-                out = new FileOutputStream(mainObject.getImageOptimize().getOut());
-                out.write(mainObject.getImageOptimize().getStream().toByteArray());
-                out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+        if(compressButton.getText().toString().equals(getString(R.string.cancel))) {
+            Compress.getInstance(this).cancel();
+        } else {
+            for (MainObject mainObject : mainList) {
+                FileOutputStream out;
+                try {
+                    out = new FileOutputStream(mainObject.getImageOptimize().getOut());
+                    out.write(mainObject.getImageOptimize().getStream().toByteArray());
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+            Snackbar.make(findViewById(android.R.id.content), R.string.compress_end, Snackbar.LENGTH_LONG).setAction("ouvrir", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.fromFile(mainList.get(0).getImageOptimize().getOut().getParentFile()), "resource/folder");
+                    startActivity(Intent.createChooser(intent, "Ouvrir le dossier"));
+                }
+            }).show();
         }
-        Snackbar.make(findViewById(android.R.id.content), R.string.compress_end, Snackbar.LENGTH_LONG).setAction("ouvrir", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.fromFile(mainList.get(0).getImageOptimize().getOut().getParentFile()), "resource/folder");
-                startActivity(Intent.createChooser(intent, "Ouvrir le dossier"));
-            }
-        }).show();
     }
 
     @Override
