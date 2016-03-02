@@ -152,7 +152,7 @@ public class Compress {
                 options2.outWidth = options.outWidth;
                 options2.outHeight = options.outHeight;
                 options2.inMutable = true;
-                options2.inPreferredConfig = Bitmap.Config.RGB_565;
+                options2.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 options2.inDither = true;
                 options2.outMimeType = options.outMimeType;
 

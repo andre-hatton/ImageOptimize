@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
     private ImageView toolbarAction;
 
+    private boolean isCancel;
+
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 3;
 
     /**
@@ -142,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 int i = 0;
                 k = 0;
                 // parcours des images
+                isCancel = false;
                 final Compress compress = Compress.getInstance(this);
                 for(final String path : imageSelected) {
                     final int j = i;
@@ -159,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                 }
                                 k++;
                                 if (k >= j) {
+                                    Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
                                     toolbarAction.setClickable(true);
                                     toolbarAction.setVisibility(View.VISIBLE);
                                     compressButton.setText(R.string.compress);
@@ -175,11 +179,13 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
                         @Override
                         public void onCompressCancel() {
+                            isCancel = true;
                             if(mainList.size() > 0)
                                 mainList.remove(mainList.size() - 1);
                             adapter.setMainListRemove(mainList, k);
                             k++;
                             if (k >= j) {
+                                Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
                                 toolbarAction.setClickable(true);
                                 toolbarAction.setVisibility(View.VISIBLE);
                                 if(mainList.size() == 0) compressButton.setVisibility(View.GONE);

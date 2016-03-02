@@ -10,4 +10,5 @@
     <string name="compress">Optimiser</string>
     <string name="compress_end">Compression terminée</string>
     <string name="images">images</string>
+    <string name="image_cancel">Certaines images n\'ont pas été chargé</string>
 </resources>
