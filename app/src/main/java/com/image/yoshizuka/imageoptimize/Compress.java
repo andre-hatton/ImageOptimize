@@ -151,8 +151,11 @@ public class Compress {
                 options2.inJustDecodeBounds = false;
                 options2.outWidth = options.outWidth;
                 options2.outHeight = options.outHeight;
-                options2.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options2.inMutable = true;
+                options2.inPreferredConfig = Bitmap.Config.RGB_565;
                 options2.inDither = true;
+                options2.outMimeType = options.outMimeType;
+
 
                 int tw, th;
                 tw = options.outWidth;
@@ -183,13 +186,14 @@ public class Compress {
                 isCancel = true;
                 setCanCancel(true);
                 onCompressListener.onCompressCancel();
-                if(bitmap != null)
+                if(bitmap != null) {
                     bitmap.recycle();
+                    bitmap = null;
+                }
             }
 
             @Override
             protected ByteArrayOutputStream doInBackground(Object... params) {
-                System.out.println("CANCEL : " + isCancelled());
                 if(isCancelled() || isCancel) {
                     return null;
                 }
@@ -198,8 +202,10 @@ public class Compress {
                     bitmap = BitmapFactory.decodeFile(imagePath, options2);
                 } catch (OutOfMemoryError e) {
                     System.gc();
-                    cancel(false);
+                    cancel(true);
                     e.printStackTrace();
+                    isCancel = true;
+                    return null;
                 }
 
                 // la sortie de la compression (n'est pas un fichier pour le moment)

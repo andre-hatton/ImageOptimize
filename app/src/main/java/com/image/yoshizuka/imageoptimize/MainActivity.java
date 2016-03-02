@@ -1,9 +1,14 @@
 package com.image.yoshizuka.imageoptimize;
 
+import android.Manifest;
+import android.content.ComponentCallbacks2;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
     private ImageView toolbarAction;
 
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 3;
+
     /**
      * Liste des images selectionnées
      */
@@ -58,6 +65,30 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbarAction = (ImageView)toolbar.findViewById(R.id.toolbar_action);
@@ -72,6 +103,23 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
         adapter = new MainAdapter(this);
         imageList.setAdapter(adapter);
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        switch (level) {
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL:
+            case  ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN:
+                System.gc();
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if(requestCode == MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE) {
+
+        }
     }
 
     private int k;
@@ -114,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                     toolbarAction.setClickable(true);
                                     toolbarAction.setVisibility(View.VISIBLE);
                                     compressButton.setText(R.string.compress);
+                                    System.gc();
                                 }
                             }
                         }
@@ -135,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                 toolbarAction.setVisibility(View.VISIBLE);
                                 if(mainList.size() == 0) compressButton.setVisibility(View.GONE);
                                 compressButton.setText(R.string.compress);
+                                System.gc();
                             }
                         }
                     });
