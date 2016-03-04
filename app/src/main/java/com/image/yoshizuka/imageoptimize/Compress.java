@@ -43,6 +43,8 @@ public class Compress {
 
     private boolean isCancel = false;
 
+    private boolean isCancelOnBar = false;
+
     /**
      * Recuperation de l'instance (pour ne pas lancer de tache en parallele)
      * @param context Le context actuel
@@ -72,7 +74,17 @@ public class Compress {
      * @return true si la tache et annulée
      */
     public boolean cancel() {
-        return task != null && task.cancel(true);
+        boolean res = false;
+        if(task != null) {
+            res = task.cancel(true);
+            task = null;
+        }
+        return res;
+    }
+
+    public boolean cancelBar() {
+        isCancelOnBar = true;
+        return cancel();
     }
 
     public AsyncTask getTask() {
@@ -85,10 +97,6 @@ public class Compress {
      * @param progress Le ratio de compression
      */
     public void compressImage(final String imagePath, final int progress) {
-        // annule la tache en cours
-        if(task != null && canCancel)
-            task.cancel(false);
-
         // créer une nouvelle tache
         task = new AsyncTask<Object, ByteArrayOutputStream, ByteArrayOutputStream>() {
 
@@ -183,8 +191,14 @@ public class Compress {
             protected void onCancelled() {
                 super.onCancelled();
                 System.out.println("onCancel");
-                isCancel = true;
-                setCanCancel(true);
+                if(isCancelOnBar) {
+                    isCancelOnBar = false;
+                    isCancel = false;
+                }
+                else {
+                    isCancel = true;
+                    setCanCancel(true);
+                }
                 onCompressListener.onCompressCancel();
                 if(bitmap != null) {
                     bitmap.recycle();

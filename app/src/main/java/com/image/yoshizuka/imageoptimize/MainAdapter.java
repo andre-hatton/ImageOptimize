@@ -148,6 +148,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 final int progress = seekBar.getProgress();
                 Compress compress = Compress.getInstance(context);
+                compress.cancelBar();
                 compress.setOnCompressListener(new Compress.OnCompressListener() {
                     @Override
                     public void onCompress(MainObject mainObject) {

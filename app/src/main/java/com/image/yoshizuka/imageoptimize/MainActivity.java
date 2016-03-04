@@ -161,8 +161,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                     adapter.setMainListRemove(mainList, k);
                                 }
                                 k++;
-                                if (k >= j) {
-                                    Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
+                                if (k > j) {
+                                    if(isCancel)
+                                        Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
                                     toolbarAction.setClickable(true);
                                     toolbarAction.setVisibility(View.VISIBLE);
                                     compressButton.setText(R.string.compress);
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                 mainList.remove(mainList.size() - 1);
                             adapter.setMainListRemove(mainList, k);
                             k++;
-                            if (k >= j) {
+                            if (k > j) {
                                 Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
                                 toolbarAction.setClickable(true);
                                 toolbarAction.setVisibility(View.VISIBLE);
@@ -239,7 +240,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.fromFile(mainList.get(0).getImageOptimize().getOut().getParentFile()), "resource/folder");
+                    intent.setData(Uri.fromFile(mainList.get(0).getImageOptimize().getOut().getParentFile()));
+                    intent.setType("resource/folder");
                     startActivity(Intent.createChooser(intent, "Ouvrir le dossier"));
                 }
             }).show();

@@ -23,75 +23,78 @@ import static me.iwf.photopicker.PhotoPickerActivity.EXTRA_SHOW_GIF;
  */
 public class MediaStoreHelper {
 
-  public final static int INDEX_ALL_PHOTOS = 0;
+    public final static int INDEX_ALL_PHOTOS = 0;
 
 
-  public static void getPhotoDirs(FragmentActivity activity, Bundle args, PhotosResultCallback resultCallback) {
-    activity.getSupportLoaderManager()
-        .initLoader(0, args, new PhotoDirLoaderCallbacks(activity, resultCallback));
-  }
-
-  static class PhotoDirLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
-
-    private Context context;
-    private PhotosResultCallback resultCallback;
-
-    public PhotoDirLoaderCallbacks(Context context, PhotosResultCallback resultCallback) {
-      this.context = context;
-      this.resultCallback = resultCallback;
+    public static void getPhotoDirs(FragmentActivity activity, Bundle args, PhotosResultCallback resultCallback) {
+        activity.getSupportLoaderManager()
+                .initLoader(0, args, new PhotoDirLoaderCallbacks(activity, resultCallback));
     }
 
-    @Override public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-      return new PhotoDirectoryLoader(context, args.getBoolean(EXTRA_SHOW_GIF, false));
-    }
+    static class PhotoDirLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        private Context context;
+        private PhotosResultCallback resultCallback;
 
-      if (data == null)  return;
-      List<PhotoDirectory> directories = new ArrayList<>();
-      PhotoDirectory photoDirectoryAll = new PhotoDirectory();
-      photoDirectoryAll.setName(context.getString(R.string.__picker_all_image));
-      photoDirectoryAll.setId("ALL");
-
-      while (data.moveToNext()) {
-
-        int imageId  = data.getInt(data.getColumnIndexOrThrow(_ID));
-        String bucketId = data.getString(data.getColumnIndexOrThrow(BUCKET_ID));
-        String name = data.getString(data.getColumnIndexOrThrow(BUCKET_DISPLAY_NAME));
-        String path = data.getString(data.getColumnIndexOrThrow(DATA));
-
-        PhotoDirectory photoDirectory = new PhotoDirectory();
-        photoDirectory.setId(bucketId);
-        photoDirectory.setName(name);
-
-        if (!directories.contains(photoDirectory)) {
-          photoDirectory.setCoverPath(path);
-          photoDirectory.addPhoto(imageId, path);
-          photoDirectory.setDateAdded(data.getLong(data.getColumnIndexOrThrow(DATE_ADDED)));
-          directories.add(photoDirectory);
-        } else {
-          directories.get(directories.indexOf(photoDirectory)).addPhoto(imageId, path);
+        public PhotoDirLoaderCallbacks(Context context, PhotosResultCallback resultCallback) {
+            this.context = context;
+            this.resultCallback = resultCallback;
         }
 
-        photoDirectoryAll.addPhoto(imageId, path);
-      }
-      if (photoDirectoryAll.getPhotoPaths().size() > 0) {
-        photoDirectoryAll.setCoverPath(photoDirectoryAll.getPhotoPaths().get(0));
-      }
-      directories.add(INDEX_ALL_PHOTOS, photoDirectoryAll);
-      if (resultCallback != null) {
-        resultCallback.onResultCallback(directories);
-      }
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new PhotoDirectoryLoader(context, args.getBoolean(EXTRA_SHOW_GIF, false));
+        }
+
+        @Override public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+            if (data == null)  return;
+            List<PhotoDirectory> directories = new ArrayList<>();
+            PhotoDirectory photoDirectoryAll = new PhotoDirectory();
+            photoDirectoryAll.setName(context.getString(R.string.__picker_all_image));
+            photoDirectoryAll.setId("ALL");
+
+            while (data.moveToNext()) {
+
+                int imageId  = data.getInt(data.getColumnIndexOrThrow(_ID));
+                String bucketId = data.getString(data.getColumnIndexOrThrow(BUCKET_ID));
+                String name = data.getString(data.getColumnIndexOrThrow(BUCKET_DISPLAY_NAME));
+                String path = data.getString(data.getColumnIndexOrThrow(DATA));
+
+                if(name.equals("Optimage")) continue;
+
+                PhotoDirectory photoDirectory = new PhotoDirectory();
+                photoDirectory.setId(bucketId);
+                photoDirectory.setName(name);
+
+                if (!directories.contains(photoDirectory)) {
+                    photoDirectory.setCoverPath(path);
+                    photoDirectory.addPhoto(imageId, path);
+                    photoDirectory.setDateAdded(data.getLong(data.getColumnIndexOrThrow(DATE_ADDED)));
+                    directories.add(photoDirectory);
+                } else {
+                    directories.get(directories.indexOf(photoDirectory)).addPhoto(imageId, path);
+                }
+
+                photoDirectoryAll.addPhoto(imageId, path);
+            }
+            if (photoDirectoryAll.getPhotoPaths().size() > 0) {
+                photoDirectoryAll.setCoverPath(photoDirectoryAll.getPhotoPaths().get(0));
+            }
+            directories.add(INDEX_ALL_PHOTOS, photoDirectoryAll);
+            if (resultCallback != null) {
+                resultCallback.onResultCallback(directories);
+            }
+        }
+
+        @Override public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
     }
 
-    @Override public void onLoaderReset(Loader<Cursor> loader) {
 
+    public interface PhotosResultCallback {
+        void onResultCallback(List<PhotoDirectory> directories);
     }
-  }
-
-
-  public interface PhotosResultCallback {
-    void onResultCallback(List<PhotoDirectory> directories);
-  }
 
 }
