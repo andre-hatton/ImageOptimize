@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                     out = new FileOutputStream(mainObject.getImageOptimize().getOut());
                     out.write(mainObject.getImageOptimize().getStream().toByteArray());
                     out.close();
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(mainObject.getImageOptimize().getOut())));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
