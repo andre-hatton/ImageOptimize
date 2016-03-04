@@ -45,6 +45,8 @@ public class Compress {
 
     private boolean isCancelOnBar = false;
 
+    public final static String OPTIMAGE_PATH = Environment.getExternalStorageDirectory() + File.separator + "Optimage";
+
     /**
      * Recuperation de l'instance (pour ne pas lancer de tache en parallele)
      * @param context Le context actuel
@@ -136,7 +138,7 @@ public class Compress {
                 ext = splitFile[splitFile.length - 1];
 
                 // creer le dossier ImageOptimizer s'il n'existe pas
-                File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Optimage");
+                File directory = new File(OPTIMAGE_PATH);
                 if(!directory.exists())
                     directory.mkdirs();
 
