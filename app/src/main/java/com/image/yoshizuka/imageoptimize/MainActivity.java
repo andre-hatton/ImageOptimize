@@ -232,19 +232,23 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                     out = new FileOutputStream(mainObject.getImageOptimize().getOut());
                     out.write(mainObject.getImageOptimize().getStream().toByteArray());
                     out.close();
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(mainObject.getImageOptimize().getOut())));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            Snackbar.make(findViewById(android.R.id.content), R.string.compress_end, Snackbar.LENGTH_LONG).setAction("ouvrir", new View.OnClickListener() {
+            Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), R.string.compress_end, Snackbar.LENGTH_LONG);
+            /*
+            snackbar.setAction("ouvrir", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.fromFile(mainList.get(0).getImageOptimize().getOut().getParentFile()));
-                    intent.setType("resource/folder");
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setData(Uri.parse(Compress.OPTIMAGE_PATH));
+                    intent.setType("");
                     startActivity(Intent.createChooser(intent, "Ouvrir le dossier"));
                 }
-            }).show();
+            });*/
+            snackbar.show();
         }
     }
 
