@@ -23,7 +23,7 @@ public class ImageOptimize {
      */
     private String path;
 
-    private int width, height;
+    private int width, height, realWidth, realHeight, newWidth, newHeight;
 
     private int ratio = 80;
 
@@ -67,6 +67,10 @@ public class ImageOptimize {
         return height;
     }
 
+    public boolean hasRatio() {
+        return height == (width * realHeight) / realWidth;
+    }
+
     public void setHeight(int height) {
         this.height = height;
     }
@@ -77,5 +81,44 @@ public class ImageOptimize {
 
     public void setRatio(int ratio) {
         this.ratio = ratio;
+    }
+
+    public int getRealWidth() {
+        return realWidth;
+    }
+
+    public void setRealWidth(int realWidth) {
+        this.realWidth = realWidth;
+    }
+
+    public int getRealHeight() {
+        return realHeight;
+    }
+
+    public void setRealHeight(int realHeight) {
+        this.realHeight = realHeight;
+    }
+
+    public int getNewWidth() {
+        return newWidth;
+    }
+
+    public void setNewWidth(int newWidth) {
+        this.newWidth = newWidth;
+    }
+
+    public int getNewHeight() {
+        return newHeight;
+    }
+
+    public void setNewHeight(int newHeight) {
+        this.newHeight = newHeight;
+    }
+
+    public String getImageWidth() {
+        return newWidth > 0 ? String.valueOf(newWidth) : String.valueOf(realWidth);
+    }
+    public String getImageHeight() {
+        return newHeight > 0 ? String.valueOf(newHeight) : String.valueOf(realHeight);
     }
 }

@@ -7,6 +7,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -118,7 +120,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
     public void onBindViewHolder(final MainHolder holder, final int position) {
         holder.image.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mainList.get(position).getImageOptimize().getHeight()));
         //Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().dontTransform().into(holder.image);
-        ImageOptimize optimize = mainList.get(position).getImageOptimize();
+        final ImageOptimize optimize = mainList.get(position).getImageOptimize();
         if(optimize.getStream() == null) {
             holder.image.setLayoutParams(new RelativeLayout.LayoutParams(optimize.getWidth(), optimize.getHeight()));
             Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.empty);
@@ -126,22 +128,89 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)holder.image.getLayoutParams();
             params.addRule(RelativeLayout.CENTER_HORIZONTAL);
             holder.image.setLayoutParams(params);
-
         } else {
             Glide.with(context).load(mainList.get(position).getImageOptimize().getStream().toByteArray()).dontAnimate().into(holder.image);
         }
-        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(optimize.size() == 0 ? "calcul..." : MainObject.humanReadableByteCount(optimize.size())).concat("\nCompression : ".concat(String.valueOf(optimize.getRatio())).concat("%")));
+
+        RelativeLayout.LayoutParams imageParams = (RelativeLayout.LayoutParams) holder.image.getLayoutParams();
+        if(imageParams.height != optimize.getHeight()) {
+            imageParams.height = optimize.getHeight();
+            imageParams.width = optimize.getWidth();
+            holder.image.setLayoutParams(imageParams);
+        }
+
+        if(optimize.hasRatio())
+           holder.echel.setImageResource(R.mipmap.ech_yes);
+        else
+            holder.echel.setImageResource(R.mipmap.ech_no);
+
+        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(optimize.size() == 0 ? "calcul..." : MainObject.humanReadableByteCount(optimize.size())).concat("\nQualité : ".concat(String.valueOf(optimize.getRatio()))));
+
+        holder.width.setText(String.valueOf(optimize.getImageWidth()));
+        holder.height.setText(String.valueOf(optimize.getImageHeight()));
+        holder.bar.setProgress(optimize.getRatio());
+
+        holder.echel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int width = Integer.valueOf(holder.width.getText().toString());
+                int realWidth = mainList.get(position).getImageOptimize().getRealWidth();
+                int realHeight = mainList.get(position).getImageOptimize().getRealHeight();
+                int newHeight = (width * realHeight) / realWidth;
+                holder.height.setText(String.valueOf(newHeight));
+                holder.echel.setImageResource(R.mipmap.ech_yes);
+            }
+        });
+
+        holder.action.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMainAdapterListener.hideKeyBoard();
+                int width = Integer.valueOf(holder.width.getText().toString());
+                int height = Integer.valueOf(holder.height.getText().toString());
+                int realWidth = mainList.get(position).getImageOptimize().getRealWidth();
+                int realHeight = mainList.get(position).getImageOptimize().getRealHeight();
+                int newHeight = (width * realHeight) / realWidth;
+                if(newHeight != height) {
+                    holder.echel.setImageResource(R.mipmap.ech_no);
+                } else {
+                    holder.echel.setImageResource(R.mipmap.ech_yes);
+                }
+                Compress compress = Compress.getInstance(context);
+                compress.cancelBar();
+                compress.setOnCompressListener(new Compress.OnCompressListener() {
+                    @Override
+                    public void onCompress(MainObject mainObject) {
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainObject.getImageOptimize().size())).concat("\nQualité : ".concat(String.valueOf(optimize.getRatio()))));
+                        Glide.with(context).load(mainObject.getImageOptimize().getStream().toByteArray()).into(holder.image);
+                        onMainAdapterListener.onUpdateRatio(position, mainObject);
+                    }
+
+                    @Override
+                    public void onCompressStart(MainObject mainObject) {
+                        mainObject.getImageOptimize().setNewHeight(Integer.valueOf(holder.height.getText().toString()));
+                        mainObject.getImageOptimize().setNewWidth(Integer.valueOf(holder.width.getText().toString()));
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : calcul...").concat("\nQualité : ").concat(String.valueOf(optimize.getRatio())));
+                    }
+
+                    @Override
+                    public void onCompressCancel() {
+                    }
+                });
+                compress.compressImage(mainList.get(position).getImagePath(), holder.bar.getProgress(), Integer.valueOf(holder.width.getText().toString()), Integer.valueOf(holder.height.getText().toString()));
+            }
+        });
 
         holder.bar.setProgress(mainList.get(position).getImageOptimize().getRatio());
         holder.bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainList.get(position).getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress)).concat("%")));
+                holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainList.get(position).getImageOptimize().size())).concat("\nQualité : ".concat(String.valueOf(progress))));
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                onMainAdapterListener.hideKeyBoard();
             }
 
             @Override
@@ -153,7 +222,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
                     @Override
                     public void onCompress(MainObject mainObject) {
                         mainObject.getImageOptimize().setRatio(progress);
-                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainObject.getImageOptimize().size())).concat("\nCompression : ".concat(String.valueOf(progress)).concat("%")));
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : ").concat(MainObject.humanReadableByteCount(mainObject.getImageOptimize().size())).concat("\nQualité : ".concat(String.valueOf(progress))));
                         Glide.with(context).load(mainObject.getImageOptimize().getStream().toByteArray()).into(holder.image);
                         onMainAdapterListener.onUpdateRatio(position, mainObject);
                     }
@@ -161,14 +230,14 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
                     @Override
                     public void onCompressStart(MainObject mainObject) {
                         mainObject.getImageOptimize().setRatio(progress);
-                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : calcul...").concat("\nCompression : ").concat(String.valueOf(progress)).concat("%"));
+                        holder.size.setText("Taille d'origine : ".concat(MainObject.humanReadableByteCount(mainList.get(position).getSize())).concat("\nTaille compressée : calcul...").concat("\nQualité : ").concat(String.valueOf(progress)));
                     }
 
                     @Override
                     public void onCompressCancel() {
                     }
                 });
-                compress.compressImage(mainList.get(position).getImagePath(), progress);
+                compress.compressImage(mainList.get(position).getImagePath(), progress, Integer.valueOf(optimize.getImageWidth()), Integer.valueOf(optimize.getImageHeight()));
             }
         });
     }
@@ -188,6 +257,9 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
         public ImageView image;
         public TextView size;
         public SeekBar bar;
+        public EditText width, height;
+        public ImageView echel;
+        public Button action;
 
         public MainHolder(View itemView) {
             super(itemView);
@@ -195,11 +267,16 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainHolder> {
             image = (ImageView) itemView.findViewById(R.id.adapter_image);
             size = (TextView) itemView.findViewById(R.id.adapter_size);
             bar = (SeekBar) itemView.findViewById(R.id.adapter_bar);
+            width = (EditText) itemView.findViewById(R.id.width);
+            height = (EditText) itemView.findViewById(R.id.height);
+            echel = (ImageView) itemView.findViewById(R.id.echel);
+            action = (Button) itemView.findViewById(R.id.echel_action);
         }
     }
 
     public interface OnMainAdapterListener {
         void onUpdateRatio(int position, MainObject mainObject);
+        void hideKeyBoard();
     }
 
 }

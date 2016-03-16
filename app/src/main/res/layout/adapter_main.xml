@@ -24,4 +24,38 @@
         android:max="100"
         android:progress="80"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/adapter_bar">
+        <EditText
+            android:id="@+id/width"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number|numberSigned"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X"
+            android:textStyle="bold"/>
+        <EditText
+            android:id="@+id/height"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number|numberSigned"/>
+        <ImageView
+            android:id="@+id/echel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@mipmap/ech_yes"/>
+        <Button
+            android:id="@+id/echel_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Base.Widget.AppCompat.Button.Small"
+            android:text="OK"/>
+    </LinearLayout>
+
 </RelativeLayout>

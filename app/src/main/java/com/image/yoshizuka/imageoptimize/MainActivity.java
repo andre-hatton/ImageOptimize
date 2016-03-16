@@ -2,6 +2,7 @@ package com.image.yoshizuka.imageoptimize;
 
 import android.Manifest;
 import android.content.ComponentCallbacks2;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -14,8 +15,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -50,13 +53,30 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
      */
     private MainAdapter adapter;
 
+    /**
+     * Bouton pour finir la compression ou l'annuler
+     */
     private Button compressButton;
 
+    /**
+     * Bouton d'action de la toolbar
+     */
     private ImageView toolbarAction;
 
+    /**
+     * Annulation de l'optimisation
+     */
     private boolean isCancel;
 
+    /**
+     * Réponse pour autoriser les permissions de lecture/écriture sur le stockage externe
+     */
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 3;
+
+    /**
+     * Les instructions si aucune image
+     */
+    private TextView rule;
 
     /**
      * Liste des images selectionnées
@@ -92,6 +112,9 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
             }
         }
 
+        rule = (TextView)findViewById(R.id.main_rule);
+        rule.setVisibility(View.VISIBLE);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbarAction = (ImageView)toolbar.findViewById(R.id.toolbar_action);
         setSupportActionBar(toolbar);
@@ -102,9 +125,23 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
 
         imageList = (RecyclerView)findViewById(R.id.main_image);
         imageList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        imageList.setVisibility(View.GONE);
+        imageList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(newState == RecyclerView.SCROLL_STATE_DRAGGING) hideKeyBoard();
+            }
+        });
 
         adapter = new MainAdapter(this);
         imageList.setAdapter(adapter);
+
+       Uri data = getIntent().getData();
+
+        if(data != null)
+            onCompressImage(data);
+
     }
 
     @Override
@@ -135,6 +172,8 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 toolbarAction.setVisibility(View.GONE);
                 // liste des chemin des images d'origine
                 imageSelected = data.getStringArrayListExtra(PhotoPickerActivity.KEY_SELECTED_PHOTOS);
+                rule.setVisibility(View.GONE);
+                imageList.setVisibility(View.VISIBLE);
 
                 // vide la liste des données de la listView
                 mainList = new ArrayList<>();
@@ -189,7 +228,11 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                                 Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
                                 toolbarAction.setClickable(true);
                                 toolbarAction.setVisibility(View.VISIBLE);
-                                if(mainList.size() == 0) compressButton.setVisibility(View.GONE);
+                                if(mainList.size() == 0) {
+                                    compressButton.setVisibility(View.GONE);
+                                    rule.setVisibility(View.VISIBLE);
+                                    imageList.setVisibility(View.GONE);
+                                }
                                 compressButton.setText(R.string.compress);
                                 System.gc();
                             }
@@ -203,6 +246,76 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
                 }
             }
         }
+    }
+
+    /**
+     * Compressse un image donnée
+     * @param image L'image
+     */
+    private void onCompressImage(Uri image) {
+
+        imageSelected = new ArrayList<>();
+        imageSelected.add(image.getPath());
+        // vide la liste des données de la listView
+        mainList = new ArrayList<>();
+        adapter.setMainList(mainList);
+        compressButton.setVisibility(View.VISIBLE);
+        compressButton.setText(R.string.cancel);
+        isCancel = false;
+        rule.setVisibility(View.GONE);
+        imageList.setVisibility(View.VISIBLE);
+        final Compress compress = Compress.getInstance(this);
+        // on detecte la fin de la compression pour ajouter l'image à la liste
+        compress.setOnCompressListener(new Compress.OnCompressListener() {
+            @Override
+            public void onCompress(MainObject mainObject) {
+                if(k < mainList.size()) {
+                    if(mainObject.getImageOptimize() != null && mainObject.getImageOptimize().getStream() != null) {
+                        mainList.set(0, mainObject);
+                        adapter.updateMainList(mainList, 0);
+                    } else {
+                        mainList.remove(0);
+                        adapter.setMainListRemove(mainList, 0);
+                    }
+                    if(isCancel)
+                        Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
+                    toolbarAction.setClickable(true);
+                    toolbarAction.setVisibility(View.VISIBLE);
+                    compressButton.setText(R.string.compress);
+                    rule.setVisibility(View.GONE);
+                    imageList.setVisibility(View.VISIBLE);
+                    System.gc();
+                }
+            }
+
+            @Override
+            public void onCompressStart(MainObject mainObject) {
+                mainList.add(mainObject);
+                adapter.setMainList(mainList, 0);
+            }
+
+            @Override
+            public void onCompressCancel() {
+                isCancel = true;
+                if(mainList.size() > 0)
+                    mainList.remove(mainList.size() - 1);
+                adapter.setMainListRemove(mainList, 0);
+                Snackbar.make(findViewById(android.R.id.content), R.string.image_cancel, Snackbar.LENGTH_LONG).show();
+                toolbarAction.setClickable(true);
+                toolbarAction.setVisibility(View.VISIBLE);
+                if(mainList.size() == 0) {
+                    compressButton.setVisibility(View.GONE);
+                    rule.setVisibility(View.VISIBLE);
+                    imageList.setVisibility(View.GONE);
+                }
+                compressButton.setText(R.string.compress);
+                System.gc();
+            }
+        });
+        // on empêche l'annulation des tache pour chargé toutes les images
+        compress.setCanCancel(false);
+        // compression de l'image avec un ratio de 80%
+        compress.compressImage(image.getPath(), 80);
     }
 
     /**
@@ -255,5 +368,16 @@ public class MainActivity extends AppCompatActivity implements MainAdapter.OnMai
     @Override
     public void onUpdateRatio(int position, MainObject mainObject) {
         mainList.set(position, mainObject);
+        adapter.notifyItemChanged(position);
     }
+
+    @Override
+    public void hideKeyBoard() {
+        View view = getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
 }

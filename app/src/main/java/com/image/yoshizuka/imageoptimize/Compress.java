@@ -99,6 +99,15 @@ public class Compress {
      * @param progress Le ratio de compression
      */
     public void compressImage(final String imagePath, final int progress) {
+        compressImage(imagePath, progress, 0, 0);
+    }
+
+    /**
+     * Compresse l'image de façon asynchrone
+     * @param imagePath L'image d'origine
+     * @param progress Le ratio de compression
+     */
+    public void compressImage(final String imagePath, final int progress, final int width, final int height) {
         // créer une nouvelle tache
         task = new AsyncTask<Object, ByteArrayOutputStream, ByteArrayOutputStream>() {
 
@@ -125,7 +134,7 @@ public class Compress {
             /**
              * Les dimension de l'image de sortie
              */
-            private int w, h;
+            private int w, h, realW, realH;
 
             private BitmapFactory.Options options2;
 
@@ -159,8 +168,8 @@ public class Compress {
                 BitmapFactory.decodeFile(imagePath, options);
                 options2 = new BitmapFactory.Options();
                 options2.inJustDecodeBounds = false;
-                options2.outWidth = options.outWidth;
-                options2.outHeight = options.outHeight;
+                options2.outWidth = width > 0 ? width : options.outWidth;
+                options2.outHeight = height > 0 ? height : options.outHeight;
                 options2.inMutable = true;
                 options2.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 options2.inDither = true;
@@ -168,19 +177,26 @@ public class Compress {
 
 
                 int tw, th;
-                tw = options.outWidth;
-                th = options.outHeight;
-                int width = context.getResources().getDisplayMetrics().widthPixels;
-                if(tw > width) {
-                    th = (th * width) / tw;
-                    tw = width;
+                tw = options2.outWidth;
+                th = options2.outHeight;
+                int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+                if(tw > screenWidth) {
+                    th = (th * screenWidth) / tw;
+                    tw = screenWidth;
                 }
+                realW = options.outWidth;
+                realH = options.outHeight;
                 ImageOptimize imageOptimize = new ImageOptimize();
                 imageOptimize.setHeight(th);
                 imageOptimize.setWidth(tw);
+                imageOptimize.setRealWidth(options.outWidth);
+                imageOptimize.setRealHeight(options.outHeight);
+                imageOptimize.setNewWidth(options2.outWidth);
+                imageOptimize.setNewHeight(options2.outHeight);
                 imageOptimize.setPath(imagePath);
                 imageOptimize.setOut(file);
                 imageOptimize.setStream(null);
+                imageOptimize.setRatio(progress);
 
                 MainObject mainObject = new MainObject();
                 mainObject.setImageOptimize(imageOptimize);
@@ -192,7 +208,6 @@ public class Compress {
             @Override
             protected void onCancelled() {
                 super.onCancelled();
-                System.out.println("onCancel");
                 if(isCancelOnBar) {
                     isCancelOnBar = false;
                     isCancel = false;
@@ -224,6 +239,18 @@ public class Compress {
                     return null;
                 }
 
+                if(width > 0 && height > 0) {
+                    try {
+                        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                    } catch (OutOfMemoryError e) {
+                        System.gc();
+                        cancel(true);
+                        e.printStackTrace();
+                        isCancel = true;
+                        return null;
+                    }
+                }
+
                 // la sortie de la compression (n'est pas un fichier pour le moment)
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 if(ext.toLowerCase().equals("jpg") || ext.toLowerCase().equals("jpeg")) {
@@ -246,16 +273,21 @@ public class Compress {
                 imageOptimize.setOut(file);
                 imageOptimize.setPath(imagePath);
                 imageOptimize.setStream(os);
+                imageOptimize.setNewWidth(width);
+                imageOptimize.setNewHeight(height);
+                imageOptimize.setRealWidth(realW);
+                imageOptimize.setRealHeight(realH);
+                imageOptimize.setRatio(progress);
                 try {
                     if(os != null)
                         os.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                int width = context.getResources().getDisplayMetrics().widthPixels;
-                if(w > width) {
-                    h = (h * width) / w;
-                    w = width;
+                int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+                if(w > screenWidth) {
+                    h = (h * screenWidth) / w;
+                    w = screenWidth;
                 }
                 imageOptimize.setWidth(w);
                 imageOptimize.setHeight(h);
